@@ -183,6 +183,7 @@ MongodbUriParser.prototype.format = function format(uriObject) {
  *
  *   mongodb://[username[:password]@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database]][?options]
  *
+ * Intended for debugging. Password will be redacted and HTML entities in URI are not encoded
  * @param {Object=} uriObject
  * @return {String}
  */
@@ -199,7 +200,6 @@ MongodbUriParser.prototype.debug = function debug(uriObject) {
 
     if (uriObject.username) {
         uri += uriObject.username;
-        // While it's not to the official spec, we allow empty passwords
         if (uriObject.password)
             uri += ':[**REDACTED**]';
         uri += '@';
