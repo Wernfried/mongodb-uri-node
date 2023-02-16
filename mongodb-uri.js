@@ -100,15 +100,33 @@ MongodbUriParser.prototype.parse = function parse(uri) {
 MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriObject) {
     uriObject.hosts = [];
     address.split(',').forEach(function (h) {
-        var i = h.indexOf(':');
-        if (i >= 0) {
-            uriObject.hosts.push(
+        if (h.includes(':')) {
+            let _host = h.split(':');
+            if (_host[0].startsWith('[')) {
+                if (_host[_host.length - 1].endsWith(']')) {
+                    // IPv6 address without port
+                    uriObject.hosts.push({ host: decodeURIComponent(_host.join(':')) });
+                } else {
+                    let p = _host.pop();
+                    // IPv6 address with port
+                    uriObject.hosts.push(
+                        {
+                            host: decodeURIComponent(_host.join(':')),
+                            port: parseInt(p)
+                        }
+                    );
+                }
+            } else {
+                // IPv4 address with port
+                uriObject.hosts.push(
                     {
-                        host: decodeURIComponent(h.substring(0, i)),
-                        port: parseInt(h.substring(i + 1))
+                        host: decodeURIComponent(_host[0]),
+                        port: parseInt(_host[1])
                     }
-            );
+                );
+            }
         } else {
+            // IPv4 address without port
             uriObject.hosts.push({ host: decodeURIComponent(h) });
         }
     });
@@ -153,6 +171,54 @@ MongodbUriParser.prototype.format = function format(uriObject) {
         Object.keys(uriObject.options).forEach(function (k, i) {
             uri += i === 0 ? '?' : '&';
             uri += encodeURIComponent(k) + '=' + encodeURIComponent(uriObject.options[k]);
+        });
+    }
+
+    return uri;
+
+};
+
+/**
+ * Takes a URI object and returns a URI string of the form:
+ *
+ *   mongodb://[username[:password]@]host1[:port1][,host2[:port2],...[,hostN[:portN]]][/[database]][?options]
+ *
+ * @param {Object=} uriObject
+ * @return {String}
+ */
+MongodbUriParser.prototype.debug = function debug(uriObject) {
+
+    if (!uriObject) {
+        return (this.scheme || 'mongodb') + '://localhost';
+    }
+
+    if (this.scheme && uriObject.scheme && this.scheme !== uriObject.scheme) {
+        throw new Error('Scheme not supported: ' + uriObject.scheme);
+    }
+    var uri = (this.scheme || uriObject.scheme || 'mongodb') + '://';
+
+    if (uriObject.username) {
+        uri += uriObject.username;
+        // While it's not to the official spec, we allow empty passwords
+        if (uriObject.password)
+            uri += ':[**REDACTED**]';
+        uri += '@';
+    }
+
+    let addresses = [];
+    for (const h of uriObject.hosts)
+        addresses.push(h.port ? `${h.host}:${h.port}` : h.host);
+    uri += addresses.join(',');
+
+    // While it's not to the official spec, we only put a slash if there's a database, independent of whether there are options
+    if (uriObject.database) {
+        uri += '/' + uriObject.database;
+    }
+
+    if (uriObject.options) {
+        Object.keys(uriObject.options).forEach(function (k, i) {
+            uri += i === 0 ? '?' : '&';
+            uri += k + '=' + uriObject.options[k];
         });
     }
 
@@ -208,7 +274,7 @@ MongodbUriParser.prototype.formatMongoose = function formatMongoose(uri) {
         }
         // This trick is okay because format() never dynamically inspects the keys in its argument
         var singleUriObject = Object.create(uri);
-        singleUriObject.hosts = [ h ];
+        singleUriObject.hosts = [h];
         connectionString += parser.format(singleUriObject);
     });
     return connectionString;
@@ -217,6 +283,6 @@ MongodbUriParser.prototype.formatMongoose = function formatMongoose(uri) {
 exports.MongodbUriParser = MongodbUriParser;
 
 var defaultParser = new MongodbUriParser();
-[ 'parse', 'format', 'formatMongoose' ].forEach(function (f) {
+['parse', 'format', 'debug', 'formatMongoose'].forEach(function (f) {
     exports[f] = defaultParser[f].bind(defaultParser);
 });
