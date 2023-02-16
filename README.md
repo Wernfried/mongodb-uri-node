@@ -92,6 +92,12 @@ console.log(uri);
 mongodb://user%3An%40me:p%40ssword@host:1234/d%40tabase?authSource=%40dmin
 ```
 
+
+### debug
+
+Does the same as ```format``` but password is redacted and HTML entities in URI are not encoded
+
+
 ### formatMongoose
 
 Takes either a URI object or string and returns a Mongoose connection string. Specifically, instead of listing all hosts
