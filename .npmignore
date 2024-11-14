@@ -24,3 +24,5 @@ mongodb-uri.mocha.js
 *~
 .#*
 *#
+
+package-lock.json
