@@ -116,9 +116,10 @@ MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriOb
                         uriObject.hosts.push({ host: decodeURIComponent(_host.join(':')) });
                     } else if (_host[_host.length - 2].endsWith(']')) {
                         // IPv6 address with port
+                        let p = _host.pop();
                         uriObject.hosts.push({
-                            host: decodeURIComponent(_host.slice(0, -1).join(':')),
-                            port: parseInt(_host[_host.length - 1])
+                            host: decodeURIComponent(_host.join(':')),
+                            port: parseInt(p)
                         });
                     } else {
                         throw new Error(`Invalid format for IPv6 address '${h}', surounding brackets "[]" are required`);
