@@ -104,7 +104,7 @@ MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriOb
             let _host = h.split(':');
             if (_host.length == 2) {
                 // IPv4 address or hostname with port
-                hosts.push({
+                uriObject.hosts.push({
                     host: decodeURIComponent(_host[0]),
                     port: parseInt(_host[1])
                 });
@@ -113,10 +113,10 @@ MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriOb
                 if (_host[0].startsWith('[')) {
                     if (_host[_host.length - 1].endsWith(']')) {
                         // IPv6 address without port
-                        hosts.push({ host: decodeURIComponent(_host.join(':')) });
+                        uriObject.hosts.push({ host: decodeURIComponent(_host.join(':')) });
                     } else if (_host[_host.length - 2].endsWith(']')) {
                         // IPv6 address with port
-                        hosts.push({
+                        uriObject.hosts.push({
                             host: decodeURIComponent(_host.slice(0, -1).join(':')),
                             port: parseInt(_host[_host.length - 1])
                         });
@@ -129,7 +129,7 @@ MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriOb
             }
         } else {
             // IPv4 address or hostname without port
-            hosts.push({ host: decodeURIComponent(h) });
+            uriObject.hosts.push({ host: decodeURIComponent(h) });
         }
     });
 };
