@@ -22,13 +22,7 @@
     "license": "MIT",
     "main": "mongodb-uri",
     "devDependencies": {
-        "jake": "0.5.x",
-        "mocha": "1.9.x",
-        "should": "1.2.x",
-        "jake-mocha": "0.9.x"
-    },
-    "scripts": {
-        "test": "jake --trace"
+        "should": "1.2.x"
     },
     "engines": {
         "node": ">= 0.6.0"
