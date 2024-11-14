@@ -102,32 +102,34 @@ MongodbUriParser.prototype._parseAddress = function _parseAddress(address, uriOb
     address.split(',').forEach(function (h) {
         if (h.includes(':')) {
             let _host = h.split(':');
-            if (_host[0].startsWith('[')) {
-                if (_host[_host.length - 1].endsWith(']')) {
-                    // IPv6 address without port
-                    uriObject.hosts.push({ host: decodeURIComponent(_host.join(':')) });
-                } else {
-                    let p = _host.pop();
-                    // IPv6 address with port
-                    uriObject.hosts.push(
-                        {
-                            host: decodeURIComponent(_host.join(':')),
-                            port: parseInt(p)
-                        }
-                    );
-                }
+            if (_host.length == 2) {
+                // IPv4 address or hostname with port
+                hosts.push({
+                    host: decodeURIComponent(_host[0]),
+                    port: parseInt(_host[1])
+                });
             } else {
-                // IPv4 address with port
-                uriObject.hosts.push(
-                    {
-                        host: decodeURIComponent(_host[0]),
-                        port: parseInt(_host[1])
+                // IPv6 address
+                if (_host[0].startsWith('[')) {
+                    if (_host[_host.length - 1].endsWith(']')) {
+                        // IPv6 address without port
+                        hosts.push({ host: decodeURIComponent(_host.join(':')) });
+                    } else if (_host[_host.length - 2].endsWith(']')) {
+                        // IPv6 address with port
+                        hosts.push({
+                            host: decodeURIComponent(_host.slice(0, -1).join(':')),
+                            port: parseInt(_host[_host.length - 1])
+                        });
+                    } else {
+                        throw new Error(`Invalid format for IPv6 address '${h}', surounding brackets "[]" are required`);
                     }
-                );
+                } else {
+                    throw new Error(`Invalid format for IPv6 address ${h}, surounding brackets "[]" are required`);
+                }
             }
         } else {
-            // IPv4 address without port
-            uriObject.hosts.push({ host: decodeURIComponent(h) });
+            // IPv4 address or hostname without port
+            hosts.push({ host: decodeURIComponent(h) });
         }
     });
 };
